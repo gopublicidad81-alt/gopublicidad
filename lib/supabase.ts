@@ -15,6 +15,11 @@ function getClient(): SupabaseClient {
   }
   _client = createClient(url, serviceRole, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      // Evita que Next.js cachee las respuestas GET de Supabase (si no, la
+      // lista queda con datos viejos/vacíos aunque la base ya tenga filas).
+      fetch: (input, init) => fetch(input as RequestInfo, { ...init, cache: "no-store" }),
+    },
   });
   return _client;
 }
