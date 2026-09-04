@@ -38,6 +38,41 @@ asignado, visible en la vista de Vendedores y en el detalle del lead.
 | `/conversaciones` | Bandeja tipo inbox con todas las conversaciones |
 | `/vendedores` | Alta/baja de vendedores y su carga de leads |
 
+## Acceso (login)
+
+El panel está protegido con un login de un solo usuario (middleware + cookie de
+sesión firmada). Se configura con variables de entorno:
+
+- `AUTH_EMAIL` — correo de acceso
+- `AUTH_PASSWORD` — clave
+- `AUTH_SECRET` — secreto para firmar la sesión (genera uno largo y aleatorio)
+
+Sin sesión válida, todo redirige a `/login`. La clave nunca viaja al navegador ni
+se guarda en git.
+
+## Deploy en Vercel
+
+1. Sube el repo a GitHub (ya está).
+2. En Vercel: **Add New → Project** → importa el repo `gopublicidad`.
+3. Framework: **Next.js** (autodetectado). No cambies el build.
+4. En **Environment Variables** agrega (Production + Preview):
+
+   | Variable | Valor |
+   |----------|-------|
+   | `SUPABASE_URL` | tu URL de Supabase |
+   | `SUPABASE_ANON_KEY` | anon key |
+   | `SUPABASE_SERVICE_ROLE` | service_role key |
+   | `AUTH_EMAIL` | correo de acceso |
+   | `AUTH_PASSWORD` | clave de acceso |
+   | `AUTH_SECRET` | secreto aleatorio largo |
+   | `APP_URL` | la URL final de Vercel (ej. https://fronteco.vercel.app) |
+
+5. **Deploy**. Vercel te da la URL. Luego actualiza `APP_URL` con esa URL y
+   redeploy (para que los links de correos apunten bien).
+
+> Las páginas usan render dinámico y los datos de Supabase van con `no-store`,
+> así que en Vercel siempre ves datos frescos.
+
 ## Deploy con Docker (servidor)
 
 La imagen usa el output **standalone** de Next (imagen chica, sin dev deps).

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: "grid" },
@@ -28,7 +28,17 @@ function Icon({ name }: { name: string }) {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+
+  // No mostrar el sidebar en el login.
+  if (pathname === "/login" || pathname.startsWith("/login/")) return null;
+
+  async function logout() {
+    await fetch("/api/logout", { method: "POST" });
+    router.replace("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -58,8 +68,15 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-4 text-[11px] text-slate-400 border-t border-slate-100">
-        ZAVU · Supabase
+      <div className="p-3 border-t border-slate-100">
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+          Cerrar sesión
+        </button>
+        <div className="px-3 pt-2 text-[11px] text-slate-400">ZAVU · Supabase</div>
       </div>
     </aside>
   );
