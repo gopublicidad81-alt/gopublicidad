@@ -25,14 +25,25 @@ export function scoreBar(score: number): string {
 
 export function initials(name?: string | null): string {
   if (!name) return "?";
-  const parts = name.trim().split(/\s+/);
-  return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  // Toma la primera letra/número de las dos primeras palabras, de forma segura
+  // por code points (Array.from) para no cortar emojis por la mitad y evitar
+  // el carácter roto "�" que rompe la hidratación de React.
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const letras = words
+    .map((w) => Array.from(w).find((ch) => /[\p{L}\p{N}]/u.test(ch)))
+    .filter((ch): ch is string => Boolean(ch))
+    .slice(0, 2);
+  return letras.join("") || "?";
 }
+
+// Zona horaria fija: el server (Coolify) suele correr en UTC y el cliente en
+// America/Santiago; sin fijarla, las fechas difieren y rompen la hidratación.
+const TZ = "America/Santiago";
 
 export function fmtDate(iso?: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric", timeZone: TZ });
 }
 
 export function fmtDateTime(iso?: string | null): string {
@@ -43,6 +54,7 @@ export function fmtDateTime(iso?: string | null): string {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: TZ,
   });
 }
 
