@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.gitignore
+npm-debug.log*
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
+# Nunca copiar secretos a la imagen (se inyectan en runtime)
+.env
+.env.*
+!.env.example

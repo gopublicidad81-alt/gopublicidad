@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    image: fronteco:latest
+    container_name: fronteco
+    ports:
+      - "3000:3000"
+    # Las claves se leen en runtime desde este archivo (no va en git ni en la imagen).
+    env_file:
+      - .env.local
+    restart: unless-stopped
