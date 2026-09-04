@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { ESTADOS } from "@/lib/types";
 
 const MIGRACION_MSG =
-  "La columna 'vendedor_id' no existe todavía. Corre supabase/migration.sql en el SQL Editor de Supabase.";
+  "Falta una columna en 'leads' (vendedor_id o procesado). Corre las migraciones de supabase/ en el SQL Editor de Supabase.";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const body = await req.json().catch(() => null);
@@ -20,6 +20,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
     patch.estado = body.estado;
   }
+  if ("procesado" in body) {
+    patch.procesado = Boolean(body.procesado);
+  }
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nada que actualizar." }, { status: 400 });
@@ -27,7 +30,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const { data, error } = await supabaseAdmin.from("leads").update(patch).eq("id", params.id).select().single();
   if (error) {
-    const msg = /vendedor_id/i.test(error.message) && /column|does not exist/i.test(error.message)
+    const msg = /(vendedor_id|procesado)/i.test(error.message) && /column|does not exist/i.test(error.message)
       ? MIGRACION_MSG
       : error.message;
     return NextResponse.json({ error: msg }, { status: 400 });

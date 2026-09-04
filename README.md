@@ -23,6 +23,11 @@ La tabla `leads` no traía columna de vendedor. Para poder asignar vendedores:
 Eso crea la tabla `vendedores` y agrega `leads.vendedor_id`. Mientras no lo corras,
 el panel funciona igual pero muestra un aviso y no deja asignar vendedores.
 
+**Migración 02 (estado de gestión):** corre también
+[`supabase/migration-02-procesado.sql`](supabase/migration-02-procesado.sql). Agrega
+`leads.procesado` (boolean) para el switch **En proceso / Listo** de cada lead
+asignado, visible en la vista de Vendedores y en el detalle del lead.
+
 ## Estructura
 
 | Ruta | Qué hace |

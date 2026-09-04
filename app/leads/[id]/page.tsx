@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui";
 import ChatThread from "@/components/ChatThread";
 import EstadoSelect from "@/components/EstadoSelect";
 import VendedorSelect from "@/components/VendedorSelect";
+import ProcesadoSwitch from "@/components/ProcesadoSwitch";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,11 @@ export default async function LeadDetailPage({ params }: { params: { id: string 
             <div className="mt-4">
               <label className="text-xs font-medium text-slate-500 mb-1 block">Vendedor asignado</label>
               <VendedorSelect leadId={lead.id} vendedorId={lead.vendedor_id} vendedores={vendedores} />
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-xs font-medium text-slate-500">Gestión del vendedor</span>
+              <ProcesadoSwitch leadId={lead.id} procesado={Boolean(lead.procesado)} />
             </div>
           </div>
 

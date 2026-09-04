@@ -77,6 +77,7 @@ export interface Lead {
   presupuesto_estimado: string | null;
   urgente: boolean;
   score: number;
+  procesado: boolean;
   resumen: string | null;
   ubicacion: string | null;
   created_at: string;
