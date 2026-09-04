@@ -27,7 +27,9 @@ export async function POST(req: Request) {
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // secure solo si sirves por HTTPS (según APP_URL). Así funciona también
+    // detrás de http://IP:3000 en un VPS sin HTTPS.
+    secure: (process.env.APP_URL || "").startsWith("https://"),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE_SEC,
