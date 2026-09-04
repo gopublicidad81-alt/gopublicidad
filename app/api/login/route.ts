@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, crearSesion, timingSafeEqual } from "@/lib/auth";
+import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, crearSesion, sha256Hex, timingSafeEqual } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -8,17 +8,28 @@ export async function POST(req: Request) {
 
   const AUTH_EMAIL = (process.env.AUTH_EMAIL || "").trim().toLowerCase();
   const AUTH_PASSWORD = process.env.AUTH_PASSWORD || "";
+  // Hash SHA-256 (hex) de la clave. Preferido: no lleva caracteres que Coolify/
+  // Docker interpolen (como "$"), evitando que la clave se corrompa.
+  const AUTH_PASSWORD_HASH = (process.env.AUTH_PASSWORD_HASH || "").trim().toLowerCase();
   const AUTH_SECRET = process.env.AUTH_SECRET || "";
 
-  if (!AUTH_EMAIL || !AUTH_PASSWORD || !AUTH_SECRET) {
+  if (!AUTH_EMAIL || (!AUTH_PASSWORD && !AUTH_PASSWORD_HASH) || !AUTH_SECRET) {
     return NextResponse.json(
-      { error: "Login no configurado (faltan AUTH_EMAIL / AUTH_PASSWORD / AUTH_SECRET)." },
+      { error: "Login no configurado (faltan AUTH_EMAIL / AUTH_PASSWORD(_HASH) / AUTH_SECRET)." },
       { status: 500 }
     );
   }
 
   const emailOk = email.length === AUTH_EMAIL.length && timingSafeEqual(email, AUTH_EMAIL);
-  const passOk = password.length === AUTH_PASSWORD.length && timingSafeEqual(password, AUTH_PASSWORD);
+
+  let passOk = false;
+  if (AUTH_PASSWORD_HASH) {
+    const h = await sha256Hex(password);
+    passOk = h.length === AUTH_PASSWORD_HASH.length && timingSafeEqual(h, AUTH_PASSWORD_HASH);
+  } else {
+    passOk = password.length === AUTH_PASSWORD.length && timingSafeEqual(password, AUTH_PASSWORD);
+  }
+
   if (!emailOk || !passOk) {
     return NextResponse.json({ error: "Correo o clave incorrectos." }, { status: 401 });
   }

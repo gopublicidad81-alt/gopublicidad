@@ -61,3 +61,12 @@ export async function verificarSesion(secret: string, token?: string | null): Pr
 }
 
 export const SESSION_MAX_AGE_SEC = MAX_AGE_SEC;
+
+/** SHA-256 en hex (para comparar contra AUTH_PASSWORD_HASH). */
+export async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(text));
+  const bytes = new Uint8Array(buf);
+  let hex = "";
+  for (let i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, "0");
+  return hex;
+}
