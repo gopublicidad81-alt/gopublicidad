@@ -31,10 +31,15 @@ export async function POST(req: Request) {
   const errores: { nombre: string; error: string }[] = [];
 
   for (const file of files) {
-    // Conserva el nombre ORIGINAL (espacios incluidos — la convención del proyecto es
-    // "Marca - Rubro.ext" y el bot la usa para detectar el rubro). Solo se evitan
-    // barras de ruta y nombres vacíos.
-    const limpio = file.name.trim().replace(/[/\\]+/g, "-");
+    // Conserva espacios (convención "Marca - Rubro.ext" que el bot usa para detectar
+    // el rubro) pero TRANSLITERA a ASCII: este Storage rechaza claves con tildes/
+    // no-ASCII ("Invalid key"). ó→o, é→e, ñ→n; emojis y símbolos raros se quitan.
+    const limpio = file.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // tildes/diacríticos de la descomposición NFD
+      .replace(/[^ -~]/g, "")          // deja solo ASCII imprimible
+      .replace(/[/\\]+/g, "-")         // nunca barras de ruta
+      .trim();
     if (!limpio || limpio === "." || limpio === "..") {
       errores.push({ nombre: file.name, error: "Nombre de archivo no válido." });
       continue;

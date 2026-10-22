@@ -40,7 +40,13 @@ export default function MultimediaUploader({
       const ok = json.subidos?.length || 0;
       const fallidos = json.errores?.length || 0;
       setError(fallidos > 0 ? `${fallidos} archivo(s) con error: ${json.errores.map((e: any) => e.nombre).join(", ")}` : null);
-      setMensaje(`${ok} archivo(s) subido(s) correctamente a ${destino || "la raíz"}.`);
+      const nombres = (json.subidos || [])
+        .map((s: any) => String(s.path || "").split("/").pop())
+        .filter(Boolean);
+      const lista = nombres.length > 3
+        ? `${nombres.slice(0, 3).join(", ")} y ${nombres.length - 3} más`
+        : nombres.join(", ");
+      setMensaje(`${ok} archivo(s) subido(s) a ${destino || "la raíz"}: ${lista}`);
       if (inputRef.current) inputRef.current.value = "";
       router.refresh();
     } catch (e) {
