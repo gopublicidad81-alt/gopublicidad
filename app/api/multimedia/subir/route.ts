@@ -31,9 +31,11 @@ export async function POST(req: Request) {
   const errores: { nombre: string; error: string }[] = [];
 
   for (const file of files) {
-    // Sanitiza el nombre: deja letras/números/punto/guion/paréntesis y reemplaza espacios.
-    const limpio = file.name.replace(/\s+/g, "_").replace(/[^\w.\-()]/g, "");
-    if (!limpio) {
+    // Conserva el nombre ORIGINAL (espacios incluidos — la convención del proyecto es
+    // "Marca - Rubro.ext" y el bot la usa para detectar el rubro). Solo se evitan
+    // barras de ruta y nombres vacíos.
+    const limpio = file.name.trim().replace(/[/\\]+/g, "-");
+    if (!limpio || limpio === "." || limpio === "..") {
       errores.push({ nombre: file.name, error: "Nombre de archivo no válido." });
       continue;
     }
