@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ESTADOS } from "@/lib/types";
+import { getLead } from "@/lib/data";
+import { enviarAvisoAsignacion } from "@/lib/mail";
 
 const MIGRACION_MSG =
   "Falta una columna en 'leads' (vendedor_id o procesado). Corre las migraciones de supabase/ en el SQL Editor de Supabase.";
@@ -35,5 +37,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       : error.message;
     return NextResponse.json({ error: msg }, { status: 400 });
   }
+
+  // Aviso por correo al vendedor asignado (best-effort: no rompe el PATCH si falla).
+  if (patch.vendedor_id) {
+    try {
+      const lead = await getLead(params.id);
+      if (lead?.vendedor) {
+        const res = await enviarAvisoAsignacion(lead.vendedor, lead);
+        if (!res.ok && !res.skipped) console.error("[leads] aviso de asignación falló:", res.error);
+      }
+    } catch (e) {
+      console.error("[leads] error enviando aviso de asignación:", e);
+    }
+  }
+
   return NextResponse.json({ data });
 }
