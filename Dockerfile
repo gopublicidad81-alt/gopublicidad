@@ -4,14 +4,18 @@ FROM node:20-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 # npm ci resiliente a redes inestables (evita ECONNRESET en el build).
+# Node >=17 prefiere IPv6: si el host tiene IPv6 roto, npm muere con
+# ECONNRESET. Forzamos DNS IPv4-first y el registry oficial.
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
 # El lockfile se generó en Windows y npm no siempre instala el binario SWC de
 # la libc correcta; por eso forzamos el binario glibc (gnu) para Debian.
-RUN npm config set fetch-retries 5 \
+RUN npm config set registry https://registry.npmjs.org/ \
+ && npm config set fetch-retries 8 \
  && npm config set fetch-retry-factor 2 \
  && npm config set fetch-retry-mintimeout 20000 \
- && npm config set fetch-retry-maxtimeout 120000 \
- && npm config set fetch-timeout 600000 \
- && npm ci --no-audit --no-fund \
+ && npm config set fetch-retry-maxtimeout 180000 \
+ && npm config set fetch-timeout 900000 \
+ && npm ci --no-audit --no-fund --prefer-offline \
  && npm install --no-save --no-audit --no-fund @next/swc-linux-x64-gnu@14.2.33
 
 # ---------- Build ----------
