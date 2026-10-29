@@ -2,23 +2,31 @@ import nodemailer from "nodemailer";
 import { Lead, Vendedor } from "./types";
 import { ESTADO_META } from "./ui";
 
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-const MAIL_FROM = process.env.MAIL_FROM || (GMAIL_USER ? `Ecostand CRM <${GMAIL_USER}>` : undefined);
+// SMTP genérico (cPanel/hosting). Si no se define SMTP_*, cae en las variables
+// GMAIL_* por compatibilidad con la configuración anterior.
+const SMTP_USER = process.env.SMTP_USER || process.env.GMAIL_USER;
+const SMTP_PASS = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+const SMTP_HOST = process.env.SMTP_HOST || (process.env.GMAIL_USER ? "smtp.gmail.com" : undefined);
+const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+// secure=true para puerto 465 (SSL); false para 587 (STARTTLS). Se puede forzar con SMTP_SECURE.
+const SMTP_SECURE = process.env.SMTP_SECURE
+  ? process.env.SMTP_SECURE === "true"
+  : SMTP_PORT === 465;
+const MAIL_FROM = process.env.MAIL_FROM || (SMTP_USER ? `Ecostand CRM <${SMTP_USER}>` : undefined);
 const APP_URL = (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
 
 export function mailConfigurado(): boolean {
-  return Boolean(GMAIL_USER && GMAIL_APP_PASSWORD);
+  return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS);
 }
 
 let _transport: nodemailer.Transporter | null = null;
 function getTransport() {
   if (_transport) return _transport;
   _transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
   return _transport;
 }
