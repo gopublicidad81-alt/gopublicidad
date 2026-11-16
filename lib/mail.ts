@@ -206,7 +206,8 @@ export async function enviarAvisoImagen(
           ${fila("Score", `${lead.score}/100`)}
         </table>
         ${nota ? `<p style="margin:16px 0 0;padding:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:13px;">Mensaje del cliente: ${nota}</p>` : ""}
-        ${imagen ? `<p style="margin:12px 0 0;font-size:13px;"><a href="${imagen}" style="color:#1d4ed8;">Ver la imagen enviada →</a></p>` : ""}
+        ${imagen ? `<p style="margin:16px 0 0;"><img src="${imagen}" alt="Imagen enviada por el cliente" style="max-width:100%;max-height:420px;border-radius:8px;border:1px solid #e2e8f0;display:block;"></p>
+          <p style="margin:8px 0 0;font-size:13px;"><a href="${imagen}" style="color:#1d4ed8;">Abrir la imagen en una pestaña →</a></p>` : ""}
         <a href="${link}" style="display:inline-block;margin-top:20px;background:#d97706;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:9px;">
           Abrir en el CRM →
         </a>
