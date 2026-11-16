@@ -13,14 +13,20 @@ export const dynamic = "force-dynamic";
  * Autenticación por header secreto: x-webhook-secret = LEADS_WEBHOOK_SECRET.
  */
 export async function POST(req: Request) {
-  const secret = process.env.LEADS_WEBHOOK_SECRET;
+  // .trim() en ambos lados: un espacio invisible pegado al crear la variable en
+  // Coolify rompía la comparación y daba 401 eterno.
+  const secret = (process.env.LEADS_WEBHOOK_SECRET ?? "").trim();
   if (!secret) {
     return NextResponse.json(
       { error: "Falta LEADS_WEBHOOK_SECRET en las variables de entorno." },
       { status: 500 },
     );
   }
-  if (req.headers.get("x-webhook-secret") !== secret) {
+  const recibido = (req.headers.get("x-webhook-secret") ?? "").trim();
+  if (recibido !== secret) {
+    console.error(
+      `[webhook] secreto inválido: esperado len=${secret.length}, recibido len=${recibido.length}`,
+    );
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
