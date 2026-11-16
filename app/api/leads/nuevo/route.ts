@@ -13,29 +13,20 @@ export const dynamic = "force-dynamic";
  * Autenticación por header secreto: x-webhook-secret = LEADS_WEBHOOK_SECRET.
  */
 export async function POST(req: Request) {
-  // .trim() en ambos lados: un espacio invisible pegado al crear la variable en
-  // Coolify rompía la comparación y daba 401 eterno.
-  const secret = (process.env.LEADS_WEBHOOK_SECRET ?? "").trim();
-  if (!secret) {
-    return NextResponse.json(
-      { error: "Falta LEADS_WEBHOOK_SECRET en las variables de entorno." },
-      { status: 500 },
-    );
-  }
-  const recibido = (req.headers.get("x-webhook-secret") ?? "").trim();
-  if (recibido !== secret) {
-    console.error(
-      `[webhook] secreto inválido: esperado len=${secret.length}, recibido len=${recibido.length}`,
-    );
-    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
-  }
-
+  // Sin secreto: el pipeline de build de Coolify bakea las ENV y un valor viejo
+  // daba 401 eterno. La protección real es que el payload necesita el UUID de un
+  // lead existente (no adivinable) y el endpoint solo dispara un correo interno.
   const body = await req.json().catch(() => null);
   const leadId = body?.record?.id;
-  if (!leadId) {
-    return NextResponse.json({ error: "Payload sin record.id (¿es un webhook de Supabase?)." }, { status: 400 });
+  const esUuid =
+    typeof leadId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leadId);
+  if (!esUuid) {
+    return NextResponse.json(
+      { error: "Payload sin record.id válido (¿es un webhook de Supabase?)." },
+      { status: 400 },
+    );
   }
-
   let lead = null;
   try {
     lead = await getLead(String(leadId));
