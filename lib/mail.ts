@@ -169,3 +169,62 @@ export async function enviarAvisoNuevoLead(
     return { ok: false, error: e?.message ?? "error desconocido" };
   }
 }
+
+/**
+ * Alerta al equipo: el cliente envió una imagen que el bot no pudo interpretar
+ * → requiere atención humana. Best-effort: nunca lanza.
+ */
+export async function enviarAvisoImagen(
+  lead: Lead,
+  nota: string | null,
+  imagen: string | null,
+): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  const to = destinatariosNuevoLead();
+  if (!mailConfigurado()) return { ok: false, skipped: true, error: "mail no configurado" };
+  if (to.length === 0) return { ok: false, skipped: true, error: "sin destinatarios" };
+
+  const cliente = lead.cliente?.nombre || lead.telefono || "Cliente";
+  const link = `${APP_URL}/leads/${lead.id}`;
+
+  const html = `
+  <div style="font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif;background:#f8fafc;padding:24px;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
+      <div style="background:#d97706;padding:18px 24px;">
+        <div style="color:#fef3c7;font-size:12px;letter-spacing:.04em;text-transform:uppercase;">Ecostand · CRM</div>
+        <div style="color:#fff;font-size:18px;font-weight:700;margin-top:2px;">🖼️ Imagen de cliente — requiere atención</div>
+      </div>
+      <div style="padding:24px;">
+        <p style="color:#0f172a;font-size:15px;margin:0 0 16px;">
+          El cliente envió una imagen que el bot no pudo interpretar automáticamente. Revísala y contéstale.
+        </p>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+          ${fila("Cliente", cliente)}
+          ${fila("Empresa", lead.cliente?.empresa)}
+          ${fila("Teléfono", lead.telefono)}
+          ${fila("Feria", lead.feria)}
+          ${fila("Estado", lead.estado)}
+          ${fila("Score", `${lead.score}/100`)}
+        </table>
+        ${nota ? `<p style="margin:16px 0 0;padding:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:13px;">Mensaje del cliente: ${nota}</p>` : ""}
+        ${imagen ? `<p style="margin:12px 0 0;font-size:13px;"><a href="${imagen}" style="color:#1d4ed8;">Ver la imagen enviada →</a></p>` : ""}
+        <a href="${link}" style="display:inline-block;margin-top:20px;background:#d97706;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:9px;">
+          Abrir en el CRM →
+        </a>
+        <p style="color:#94a3b8;font-size:11px;margin:20px 0 0;">Este es un aviso automático del CRM de Ecostand.</p>
+      </div>
+    </div>
+  </div>`;
+
+  try {
+    await getTransport().sendMail({
+      from: MAIL_FROM,
+      to: to.join(", "),
+      subject: `🖼️ Imagen de cliente para revisar: ${cliente}`,
+      html,
+    });
+    return { ok: true };
+  } catch (e: any) {
+    console.error("[mail] error enviando alerta de imagen:", e?.message);
+    return { ok: false, error: e?.message ?? "error desconocido" };
+  }
+}
