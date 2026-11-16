@@ -3,7 +3,9 @@ import type { NextRequest } from "next/server";
 import { SESSION_COOKIE, verificarSesion } from "@/lib/auth";
 
 // Rutas que no requieren sesión.
-const PUBLICAS = ["/login", "/api/login", "/api/logout"];
+// /api/leads/nuevo: webhook del bot (aviso de lead nuevo). Se valida por UUID
+// del lead dentro de la ruta; NO requiere cookie de sesión.
+const PUBLICAS = ["/login", "/api/login", "/api/logout", "/api/leads/nuevo"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
